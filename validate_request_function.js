@@ -25,59 +25,68 @@ function check_requisites(braceletId, serviceRequested){
 
         if (res.statusCode === 200){
 
-            //Take the last request made with this bracelet
-            lastRequest = body.Items[0];
-            var maxTimestamp = parseInt(body.Items[0].timestamp.S);
-
-            for(var i=1; i < body.Count; i++){
-                var d = parseInt(body.Items[i].timestamp.S);
-                if ( d > maxTimestamp) {
-                    maxTimestamp = d;
-                    lastRequest = body.Items[i];
-                }
-            }
-        
-        
-            //check requisites
-            if(lastRequest.role.S == "bronze"){
-                //Bronze role users are allowed to access only to games room
-                if(serviceRequested == "games room") reqResult =  true;
-                else reqResult =  false;
-            }else if(lastRequest.role.S == "silver"){
-                //Silver role users are allowed to all services for a fixed number of times depending on how much they have paid
-                //check if the limit is reached
-                if(parseInt(lastRequest.accessesNumber.N) < parseInt(lastRequest.accessLimit.N) ) reqResult =  true; 
-                else reqResult = false; //limit is reached
-            }else if(lastRequest.role.S == "gold"){
-                reqResult = true; // Gold users have unlimited access
-            }
-
-            if(reqResult){
-                resultString = "access allowed";
-                updatedAccessNumber = parseInt(lastRequest.accessesNumber.N) + 1;
+            //Handling error inexistent ID in the DB
+            if(body.Count == 0){
+                //The bracelet ID that has issued the request is not registered into DB
+                send_result(braceletId + "-"+ serviceRequested + "-errorBracelet");
             }else{
-                resultString = "access not allowed";
-                updatedAccessNumber = parseInt(lastRequest.accessesNumber.N);
-            }
+                
+                //bracelet ID existent
 
-            request.post('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests', { 
-                json: {
-                    timestamp: new Date().getTime(),
-                    braceletId: braceletId,
-                    serviceRequested: serviceRequested,
-                    role: lastRequest.role.S,
-                    attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
-                    accessesNumber: updatedAccessNumber,
-                    accessLimit: parseInt(lastRequest.accessLimit.N),
-                    requestResult: resultString
+                //Take the last request made with this bracelet
+                lastRequest = body.Items[0];
+                var maxTimestamp = parseInt(body.Items[0].timestamp.S);
+
+                for(var i=1; i < body.Count; i++){
+                    var d = parseInt(body.Items[i].timestamp.S);
+                    if ( d > maxTimestamp) {
+                        maxTimestamp = d;
+                        lastRequest = body.Items[i];
+                    }
                 }
-            }, (error, response, body) => {
-                if (res.statusCode === 200){
-                    //Publish on topic the result of the store operation to be consumed by another serverless fucntion that shows the result
-                    send_result(braceletId + "-"+ serviceRequested + "-" + resultString);
-                }                    
-            });
+        
+        
+                //check requisites
+                if(lastRequest.role.S == "bronze"){
+                    //Bronze role users are allowed to access only to games room
+                    if(serviceRequested == "games room") reqResult =  true;
+                    else reqResult =  false;
+                }else if(lastRequest.role.S == "silver"){
+                    //Silver role users are allowed to all services for a fixed number of times depending on how much they have paid
+                    //check if the limit is reached
+                    if(parseInt(lastRequest.accessesNumber.N) < parseInt(lastRequest.accessLimit.N) ) reqResult =  true; 
+                    else reqResult = false; //limit is reached
+                }else if(lastRequest.role.S == "gold"){
+                    reqResult = true; // Gold users have unlimited access
+                }
 
+                if(reqResult){
+                    resultString = "access allowed";
+                    updatedAccessNumber = parseInt(lastRequest.accessesNumber.N) + 1;
+                }else{
+                    resultString = "access not allowed";
+                    updatedAccessNumber = parseInt(lastRequest.accessesNumber.N);
+                }
+
+                //Save request to DB
+                request.post('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests', { 
+                    json: {
+                        timestamp: new Date().getTime(),
+                        braceletId: braceletId,
+                        serviceRequested: serviceRequested,
+                        role: lastRequest.role.S,
+                        attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
+                        accessesNumber: updatedAccessNumber,
+                        accessLimit: parseInt(lastRequest.accessLimit.N),
+                        requestResult: resultString
+                    }
+                }, (error, response, body) => {
+                    if (res.statusCode === 200){
+                        //Publish on topic the result of the store operation to be consumed by another serverless fucntion that shows the result
+                        send_result(braceletId + "-"+ serviceRequested + "-" + resultString);
+                    }                    
+                });
+            }
         } 
     });
 }
@@ -101,5 +110,23 @@ exports.handler = function(context, event) {
     var braceletId = parseInt(extractedStrings[0]);
     var serviceRequested = extractedStrings[1];
 
-    check_requisites(braceletId, serviceRequested);
+    //handle service typing error
+    var servicesToRequest = ["games room", "spa", "gym", "restaurant", "laundry", "massages"];
+    var wrongService = true;
+
+    for(var i=0; i< servicesToRequest.length; i++){
+        if(servicesToRequest[i] == serviceRequested){
+            wrongService = false;
+            break;
+        }
+    }
+
+    if(wrongService){
+        //The requested service is wrong: it is not present in the list of services
+        send_result(braceletId + "-"+ serviceRequested + "-errorService");
+    }else{
+        //Ther requested service is one of the avalaible services
+        check_requisites(braceletId, serviceRequested);
+    }
+
 };
