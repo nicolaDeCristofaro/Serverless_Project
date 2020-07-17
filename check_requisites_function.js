@@ -74,7 +74,7 @@ function check_requisites(braceletId, serviceRequested){
             }, (error, response, body) => {
                 if (res.statusCode === 200){
                     //Publish on topic the result of the store operation to be consumed by another serverless fucntion that shows the result
-                    send_result("Request of braceletId: "+braceletId+" for service: "+ serviceRequested+" is terminated and stored into DB with result --" + resultString+"--");
+                    send_result(braceletId + "-"+ serviceRequested + "-" + resultString);
                 }                    
             });
 
