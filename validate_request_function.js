@@ -21,7 +21,15 @@ function check_requisites(braceletId, serviceRequested){
     var reqResult, resultString, updatedAccessNumber;
     const request = require('request');
 
-    request.get('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/' + braceletId, { json: true }, (err, res, body) => {
+    const options_get = {
+        url: 'https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/'+ braceletId,
+        json: 'true',
+        headers: {
+            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+        }
+    };
+
+    request.get(options_get, (err, res, body) => {
 
         if (res.statusCode === 200){
 
@@ -69,7 +77,8 @@ function check_requisites(braceletId, serviceRequested){
                 }
 
                 //Save request to DB
-                request.post('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests', { 
+                const options_post = {
+                    url: ' https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests',
                     json: {
                         timestamp: new Date().getTime(),
                         braceletId: braceletId,
@@ -79,8 +88,13 @@ function check_requisites(braceletId, serviceRequested){
                         accessesNumber: updatedAccessNumber,
                         accessLimit: parseInt(lastRequest.accessLimit.N),
                         requestResult: resultString
+                    },
+                    headers: {
+                        'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
                     }
-                }, (error, response, body) => {
+                };
+
+                request.post(options_post, (error, response, body) => {
                     if (res.statusCode === 200){
                         //Publish on topic the result of the store operation to be consumed by another serverless fucntion that shows the result
                         send_result(braceletId + "-"+ serviceRequested + "-" + resultString);
