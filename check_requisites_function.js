@@ -1,6 +1,4 @@
 var amqp = require('amqplib');
-const request = require('request');
-var reqResult, resultString;;
 
 function send_result(msg){
     var q = 'iot/sensors/result';
@@ -20,22 +18,25 @@ function send_result(msg){
 
 function check_requisites(braceletId, serviceRequested){
 
-    request.get('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/' + braceletId, { json: true }, (err, res, body) => {
+    var reqResult, resultString, updatedAccessNumber;
+    const request = require('request');
 
+    request.get('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/' + braceletId, { json: true }, (err, res, body) => {
 
         if (res.statusCode === 200){
 
             //Take the last request made with this bracelet
             lastRequest = body.Items[0];
-            var maxTimestamp = new Date(body.Items[0].timestamp.S);
+            var maxTimestamp = parseInt(body.Items[0].timestamp.S);
 
-            for(let i=1; i < body.Count; i++){
-                var d = new Date(body.Items[i].timestamp.S);
+            for(var i=1; i < body.Count; i++){
+                var d = parseInt(body.Items[i].timestamp.S);
                 if ( d > maxTimestamp) {
                     maxTimestamp = d;
                     lastRequest = body.Items[i];
                 }
-            }     
+            }
+        
         
             //check requisites
             if(lastRequest.role.S == "bronze"){
@@ -45,18 +46,39 @@ function check_requisites(braceletId, serviceRequested){
             }else if(lastRequest.role.S == "silver"){
                 //Silver role users are allowed to all services for a fixed number of times depending on how much they have paid
                 //check if the limit is reached
-                if(lastRequest.accessesNumber.N == lastRequest.accessLimit.N) reqResult =  false; //limit is reached
-                else reqResult = true;
+                if(parseInt(lastRequest.accessesNumber.N) < parseInt(lastRequest.accessLimit.N) ) reqResult =  true; 
+                else reqResult = false; //limit is reached
             }else if(lastRequest.role.S == "gold"){
                 reqResult = true; // Gold users have unlimited access
             }
 
-            if(reqResult) resultString = "access allowed";
-            else resultString = "access not allowed";
+            if(reqResult){
+                resultString = "access allowed";
+                updatedAccessNumber = parseInt(lastRequest.accessesNumber.N) + 1;
+            }else{
+                resultString = "access not allowed";
+                updatedAccessNumber = parseInt(lastRequest.accessesNumber.N);
+            }
 
-             //Publish on topic the request result to be consumed by another serverless fucntion that shows the result
-            send_result("Request of braceletId: "+braceletId+" for service: "+serviceRequested+" is terminated with result --"+resultString+"--");
-        }
+            request.post('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests', { 
+                json: {
+                    timestamp: new Date().getTime(),
+                    braceletId: braceletId,
+                    serviceRequested: serviceRequested,
+                    role: lastRequest.role.S,
+                    attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
+                    accessesNumber: updatedAccessNumber,
+                    accessLimit: parseInt(lastRequest.accessLimit.N),
+                    requestResult: resultString
+                }
+            }, (error, response, body) => {
+                if (res.statusCode === 200){
+                    //Publish on topic the result of the store operation to be consumed by another serverless fucntion that shows the result
+                    send_result("Request of braceletId: "+braceletId+" for service: "+ serviceRequested+" is terminated and stored into DB with result --" + resultString+"--");
+                }                    
+            });
+
+        } 
     });
 }
 
@@ -80,24 +102,4 @@ exports.handler = function(context, event) {
     var serviceRequested = extractedStrings[1];
 
     check_requisites(braceletId, serviceRequested);
-
-    //Save completed request to the DB
-    var tmp = new Date().getTime();
-
-    /*Save to DB
-    request.post('https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests', { 
-        json: {
-            timestamp: tmp,
-            braceletId: braceletId,
-            serviceRequested: serviceRequested,
-            role: role,
-            attemptsNumber: serviceRequest.attemptsNumber.N,
-            accessesNumber: serviceRequest.accessesNumber.N,
-            accessLimit: serviceRequest.accessLimit.N,
-            requestResult: reqResult
-        }
-    }, (err, res, body) => {
-            console.log(body);
-    })*/
-
 };
