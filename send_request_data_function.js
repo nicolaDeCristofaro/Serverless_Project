@@ -16,7 +16,7 @@ exports.handler = function(context, event) {
     var client = mqtt.connect(url, options);
 
     var braceletIds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    var servicesToRequest = ["games_room", "spa", "gym", "restaurant", "laundry", "massages"];
+    var servicesToRequest = ["gamesRoom", "spa", "gym", "restaurant", "laundry", "massages"];
              
     var randomBraceletId = braceletIds[Math.floor(Math.random() * braceletIds.length)]; 
     var randomService = servicesToRequest[Math.floor(Math.random() * servicesToRequest.length)];

@@ -41,23 +41,13 @@ function check_requisites(braceletId, serviceRequested){
                 
                 //bracelet ID existent
 
-                //Take the last request made with this bracelet
+                //The get request return the last request made with that braceletId
                 lastRequest = body.Items[0];
-                var maxTimestamp = parseInt(body.Items[0].timestamp.S);
-
-                for(var i=1; i < body.Count; i++){
-                    var d = parseInt(body.Items[i].timestamp.S);
-                    if ( d > maxTimestamp) {
-                        maxTimestamp = d;
-                        lastRequest = body.Items[i];
-                    }
-                }
-        
         
                 //check requisites
                 if(lastRequest.role.S == "bronze"){
                     //Bronze role users are allowed to access only to games room
-                    if(serviceRequested == "games room") reqResult =  true;
+                    if(serviceRequested == "gamesRoom") reqResult =  true;
                     else reqResult =  false;
                 }else if(lastRequest.role.S == "silver"){
                     //Silver role users are allowed to all services for a fixed number of times depending on how much they have paid
@@ -105,6 +95,19 @@ function check_requisites(braceletId, serviceRequested){
     });
 }
 
+function check_wrong_service(serviceRequested){
+    //handle service typing error
+    var servicesToRequest = ["gamesRoom", "spa", "gym", "restaurant", "laundry", "massages"];
+
+    for(var i=0; i< servicesToRequest.length; i++){
+        if(servicesToRequest[i] == serviceRequested){
+            return false;
+        }
+    }
+    return true;
+
+}
+
 
 function bin2string(array){
     var result = "";
@@ -124,18 +127,7 @@ exports.handler = function(context, event) {
     var braceletId = parseInt(extractedStrings[0]);
     var serviceRequested = extractedStrings[1];
 
-    //handle service typing error
-    var servicesToRequest = ["games room", "spa", "gym", "restaurant", "laundry", "massages"];
-    var wrongService = true;
-
-    for(var i=0; i< servicesToRequest.length; i++){
-        if(servicesToRequest[i] == serviceRequested){
-            wrongService = false;
-            break;
-        }
-    }
-
-    if(wrongService){
+    if(check_wrong_service(serviceRequested)){
         //The requested service is wrong: it is not present in the list of services
         send_result(braceletId + "-"+ serviceRequested + "-errorService");
     }else{
