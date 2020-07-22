@@ -1,6 +1,6 @@
 var amqp = require('amqplib');
 
-amqp.connect('amqp://guest:guest@192.168.1.11:5672').then(function(conn) {
+amqp.connect('amqp://guest:guest@192.168.1.9:5672').then(function(conn) {
   process.once('SIGINT', function() { conn.close(); });
   return conn.createChannel().then(function(ch) {
 
@@ -16,7 +16,7 @@ amqp.connect('amqp://guest:guest@192.168.1.11:5672').then(function(conn) {
 
     return ok.then(function(_consumeOk) {
       console.log(' [*] Waiting for messages. To exit press CTRL+C');
-      console.log('*--------------------------------------------------*');
+      console.log('*--------------RESULT READER--------------*');
     });
   });
 }).catch(console.warn);

@@ -2,7 +2,7 @@ var amqp = require('amqplib');
 
 function send_result(msg){
     var q = 'iot/sensors/result';
-    amqp.connect('amqp://guest:guest@192.168.1.11:5672').then(function(conn) {
+    amqp.connect('amqp://guest:guest@192.168.1.9:5672').then(function(conn) {
         return conn.createChannel().then(function(ch) {
             var ok = ch.assertQueue(q, {durable: false});
             return ok.then(function(_qok) {

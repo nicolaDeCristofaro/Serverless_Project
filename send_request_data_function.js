@@ -1,6 +1,6 @@
 var mqtt = require('mqtt'), url = require('url');
 
-var mqtt_url = url.parse(process.env.CLOUDAMQP_MQTT_URL || 'mqtt://guest:guest@192.168.1.11:1883');
+var mqtt_url = url.parse(process.env.CLOUDAMQP_MQTT_URL || 'mqtt://guest:guest@192.168.1.9:1883');
 var auth = (mqtt_url.auth || ':').split(':');
 var url = "mqtt://" + mqtt_url.host;
 
