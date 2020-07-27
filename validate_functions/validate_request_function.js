@@ -2,7 +2,7 @@ var amqp = require('amqplib');
 
 function send_result(msg){
     var q = 'iot/sensors/result';
-    amqp.connect('amqp://guest:guest@192.168.1.9:5672').then(function(conn) {
+    amqp.connect('amqp://guest:guest@192.168.1.8:5672').then(function(conn) {
         return conn.createChannel().then(function(ch) {
             var ok = ch.assertQueue(q, {durable: false});
             return ok.then(function(_qok) {
@@ -65,24 +65,43 @@ function check_requisites(braceletId, serviceRequested){
                     resultString = "access not allowed";
                     updatedAccessNumber = parseInt(lastRequest.accessesNumber.N);
                 }
-
+                
                 //Save request to DB
-                const options_post = {
-                    url: ' https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests',
-                    json: {
-                        timestamp: new Date().getTime(),
-                        braceletId: braceletId,
-                        serviceRequested: serviceRequested,
-                        role: lastRequest.role.S,
-                        attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
-                        accessesNumber: updatedAccessNumber,
-                        accessLimit: parseInt(lastRequest.accessLimit.N),
-                        requestResult: resultString
-                    },
-                    headers: {
-                        'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
-                    }
-                };
+                var options_post;
+                if(lastRequest.role.S == "silver"){
+                    options_post = {
+                        url: ' https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests',
+                        json: {
+                            timestamp: new Date().getTime(),
+                            braceletId: braceletId,
+                            serviceRequested: serviceRequested,
+                            role: lastRequest.role.S,
+                            attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
+                            accessesNumber: updatedAccessNumber,
+                            accessLimit: parseInt(lastRequest.accessLimit.N),
+                            requestResult: resultString
+                        },
+                        headers: {
+                            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+                        }
+                    };
+                }else{
+                    options_post = {
+                        url: ' https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/unlimited',
+                        json: {
+                            timestamp: new Date().getTime(),
+                            braceletId: braceletId,
+                            serviceRequested: serviceRequested,
+                            role: lastRequest.role.S,
+                            attemptsNumber: parseInt(lastRequest.attemptsNumber.N) + 1,
+                            accessesNumber: updatedAccessNumber,
+                            requestResult: resultString
+                        },
+                        headers: {
+                            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+                        }
+                    };
+                }
 
                 request.post(options_post, (error, response, body) => {
                     if (res.statusCode === 200){

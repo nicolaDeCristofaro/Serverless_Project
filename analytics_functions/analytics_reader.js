@@ -1,6 +1,6 @@
 var amqp = require('amqplib');
 
-amqp.connect('amqp://guest:guest@192.168.1.9:5672').then(function(conn) {
+amqp.connect('amqp://guest:guest@192.168.1.8:5672').then(function(conn) {
   process.once('SIGINT', function() { conn.close(); });
   return conn.createChannel().then(function(ch) {
 
