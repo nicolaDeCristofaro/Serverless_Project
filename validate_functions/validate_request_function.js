@@ -25,7 +25,7 @@ function check_requisites(braceletId, serviceRequested){
         url: 'https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/'+ braceletId,
         json: 'true',
         headers: {
-            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+            'x-api-key': '***'
         }
     };
 
@@ -82,7 +82,7 @@ function check_requisites(braceletId, serviceRequested){
                             requestResult: resultString
                         },
                         headers: {
-                            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+                            'x-api-key': '***'
                         }
                     };
                 }else{
@@ -98,7 +98,7 @@ function check_requisites(braceletId, serviceRequested){
                             requestResult: resultString
                         },
                         headers: {
-                            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+                            'x-api-key': '***'
                         }
                     };
                 }
