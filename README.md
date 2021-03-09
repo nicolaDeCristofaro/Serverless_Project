@@ -9,11 +9,11 @@ This goal is reached in a Serverless way: Serverless Computing is a cloud comput
 ## Installation process
 - We start both Nuclio and RabbitMQ using Docker Container and then we can run on browser the graphical interface to interact with the tools, for example in GUI of Nuclio it is possible to create the project and add serverless function either from scratch or importing them from .yaml file.
 
-![](./images/nuclioRabbitInstallation.jpg)
-
 - The Android MQTT Client to emulate the IoT Sensor is downloaded from Play Store.
 
 - Finally to launch the node js app that consumes the result show it, it is necessary to install node, then the amqplib and launch the app with node command.
+
+<b>You could found precise Installation Commands here </b> -> https://github.com/spagnuolocarmine/serverless-computing-for-iot 
 
 ## Project Requisites
 
