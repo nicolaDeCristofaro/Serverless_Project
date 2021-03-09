@@ -25,7 +25,7 @@ function analytics_role(roleLevel){
         url: ' https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/role/'+ roleLevel,
         json: 'true',
         headers: {
-            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+            'x-api-key': '***'
         }
     };
 
@@ -63,7 +63,7 @@ function analytics_role(roleLevel){
                         url: 'https://2mu9eygiu2.execute-api.us-east-1.amazonaws.com/hotel_service_api/requests/'+ braceletIds[i],
                         json: 'true',
                         headers: {
-                            'x-api-key': 'QRcV16gFGH2yjs6SnGQFC7KElMtqERBJa272JcZW'
+                            'x-api-key': '***'
                         }
                     };
 
